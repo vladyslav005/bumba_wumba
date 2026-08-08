@@ -9,6 +9,7 @@ class WifiErrorState(BaseState):
     def __init__(self, message):
         self.message = message
         self.button_pin = None
+        self.button_pressed_value = 0
         self.last_pin_value = 1
         self.blink_on = False
         self.last_blink = 0
@@ -18,9 +19,17 @@ class WifiErrorState(BaseState):
         # Show error message and instructions to retry
         app.display.show(self.message[:16], "ERR: Press GP22")
 
-        # Configure button on GP22 (assume active-low with pull-up)
+        # Configure button on GP22. Start with pull-up for an active-low button,
+        # but fall back to pull-down if the pin reads low on startup.
         self.button_pin = Pin(22, Pin.IN, Pin.PULL_UP)
         self.last_pin_value = self.button_pin.value()
+
+        if self.last_pin_value == 0:
+            self.button_pin = Pin(22, Pin.IN, Pin.PULL_DOWN)
+            self.button_pressed_value = 1
+            self.last_pin_value = self.button_pin.value()
+        else:
+            self.button_pressed_value = 0
 
         # Start blinking red indicator
         self.blink_on = False
@@ -39,17 +48,22 @@ class WifiErrorState(BaseState):
             else:
                 app.rgb.off()
 
-        # Detect button press (falling edge) to attempt reconnect
+        # Detect button press transition to the configured pressed state.
         try:
             val = self.button_pin.value()
         except Exception:
             # If pin read fails, just skip
             val = self.last_pin_value
 
-        if self.last_pin_value == 1 and val == 0:
+        if self.last_pin_value != val:
             # simple debounce
             time.sleep_ms(20)
-            if self.button_pin.value() == 0:
+            try:
+                val = self.button_pin.value()
+            except Exception:
+                val = self.last_pin_value
+
+            if val == self.button_pressed_value:
                 app.display.show("Reconnecting...", "Please wait...")
 
                 # Try a few reconnect attempts when user presses retry

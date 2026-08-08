@@ -13,7 +13,7 @@ class BootState(BaseState):
         print("System booting...")
 
         app.display.show(
-            "Super Bumba",
+            "Bumba Wumba",
             "Starting..."
         )
 

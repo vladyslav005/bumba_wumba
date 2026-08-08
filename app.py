@@ -12,7 +12,8 @@ class App:
             ir_service,
             screen_navigator,
             ccs811_service,
-            rgb_service
+            rgb_service,
+            telemetry_service
     ):
         self.wifi = wifi_service
         self.time_service = time_service
@@ -22,6 +23,7 @@ class App:
         self.air = ccs811_service
         self.navigator = screen_navigator
         self.rgb = rgb_service
+        self.telemetry = telemetry_service
 
         self.state = None
         self.running = True
@@ -48,5 +50,7 @@ class App:
         while self.running:
             if self.state is not None:
                 self.state.update(self)
+
+            self.telemetry.update()
 
             time.sleep_ms(50)

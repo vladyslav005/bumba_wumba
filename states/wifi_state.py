@@ -1,6 +1,6 @@
 from states.base_state import BaseState
 from states.time_sync_state import TimeSyncState
-from states.error_state import ErrorState
+from states.wifi_error_state import WifiErrorState
 
 
 class WiFiState(BaseState):
@@ -26,7 +26,7 @@ class WiFiState(BaseState):
             app.change_state(TimeSyncState())
         else:
             app.change_state(
-                ErrorState("WiFi connection failed")
+                WifiErrorState("WiFi connection failed")
             )
 
     def exit(self, app):

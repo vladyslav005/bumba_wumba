@@ -44,10 +44,6 @@ class AirQualityState(CarouselState):
         eco2 = data["eco2"]
         tvoc = data["tvoc"]
 
-        print(
-            "eCO2:", eco2,
-            "TVOC:", tvoc
-        )
 
         # Determine air quality
         if eco2 >= 1200 or tvoc >= 300:

@@ -1,16 +1,31 @@
-"""Boot state implementation."""
+import time
 
 from states.base_state import BaseState
+from states.wifi_state import WiFiState
 
 
 class BootState(BaseState):
-    """Initial startup state."""
 
-    def enter(self) -> None:
-        print("Entering boot state")
+    def __init__(self):
+        self.started_at = 0
 
-    def exit(self) -> None:
-        print("Exiting boot state")
+    def enter(self, app):
+        print("System booting...")
 
-    def update(self) -> None:
-        print("Boot state update")
+        app.display.show(
+            "Super Bumba",
+            "Starting..."
+        )
+
+        self.started_at = time.ticks_ms()
+
+    def update(self, app):
+        if time.ticks_diff(
+            time.ticks_ms(),
+            self.started_at
+        ) >= 1000:
+
+            app.change_state(WiFiState())
+
+    def exit(self, app):
+        print("Boot complete")

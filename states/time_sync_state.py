@@ -1,16 +1,30 @@
-"""Time synchronization state implementation."""
-
 from states.base_state import BaseState
+from states.home_state import HomeState
+from states.error_state import ErrorState
 
 
 class TimeSyncState(BaseState):
-    """Handles time synchronization logic."""
 
-    def enter(self) -> None:
-        print("Entering time sync state")
+    def __init__(self):
+        self.sync_attempted = False
 
-    def exit(self) -> None:
-        print("Exiting time sync state")
+    def enter(self, app):
+        print("Time sync state started")
 
-    def update(self) -> None:
-        print("Time sync state update")
+    def update(self, app):
+        if self.sync_attempted:
+            return
+
+        self.sync_attempted = True
+
+        success = app.time_service.sync()
+
+        if success:
+            app.change_state(HomeState())
+        else:
+            app.change_state(
+                ErrorState("Could not synchronize internet time")
+            )
+
+    def exit(self, app):
+        print("Time sync state finished")

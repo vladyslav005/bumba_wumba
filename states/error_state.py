@@ -1,16 +1,16 @@
-"""Error state implementation."""
-
 from states.base_state import BaseState
 
 
 class ErrorState(BaseState):
-    """Handles error recovery presentation."""
 
-    def enter(self) -> None:
-        print("Entering error state")
+    def __init__(self, message):
+        self.message = message
 
-    def exit(self) -> None:
-        print("Exiting error state")
+    def enter(self, app):
+        print("ERROR:", self.message)
 
-    def update(self) -> None:
-        print("Error state update")
+    def update(self, app):
+        pass
+
+    def exit(self, app):
+        pass

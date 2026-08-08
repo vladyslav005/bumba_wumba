@@ -1,19 +1,14 @@
 """Base class for application states."""
 
-from abc import ABC, abstractmethod
 
 
-class BaseState(ABC):
-    """Represents a single state in the application lifecycle."""
+class BaseState():
 
-    @abstractmethod
-    def enter(self) -> None:
+    def enter(self, app) -> None:
         """Execute logic when entering the state."""
 
-    @abstractmethod
-    def exit(self) -> None:
+    def exit(self, app) -> None:
         """Execute logic when leaving the state."""
 
-    @abstractmethod
-    def update(self) -> None:
+    def update(self, app) -> None:
         """Run state-specific updates."""

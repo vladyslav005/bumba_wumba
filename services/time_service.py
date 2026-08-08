@@ -1,8 +1,40 @@
-"""Time service stub."""
+import ntptime
+import time
 
 
 class TimeService:
-    """Placeholder for time synchronization."""
 
-    def sync(self) -> None:
-        print("Synchronizing time")
+    def sync(self):
+        try:
+            print("Synchronizing internet time...")
+
+            ntptime.settime()
+
+            print("Time synchronized")
+            return True
+
+        except Exception as error:
+            print("Time sync failed:", error)
+            return False
+
+    def get_time(self):
+        return time.localtime()
+
+    def get_formatted_time(self):
+        current = self.get_time()
+
+        year = current[0]
+        month = current[1]
+        day = current[2]
+        hour = current[3]
+        minute = current[4]
+        second = current[5]
+
+        return "{:02d}.{:02d}.{:04d} {:02d}:{:02d}:{:02d}".format(
+            day,
+            month,
+            year,
+            hour,
+            minute,
+            second
+        )

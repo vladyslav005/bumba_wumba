@@ -34,7 +34,7 @@ class TimeService:
             day,
             month,
             year,
-            hour,
+            hour + 2,  # Adjust for timezone (UTC+2)
             minute,
             second
         )

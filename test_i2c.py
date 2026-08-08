@@ -1,9 +1,23 @@
-from services.display_service import DisplayService
+from machine import Pin, I2C
 
-
-display = DisplayService()
-
-display.show(
-    "1234567890abcdef111",
-    "Super Bumba"
+lcd_bus = I2C(
+    0,
+    sda=Pin(4),
+    scl=Pin(5),
+    freq=100000
 )
+
+air_bus = I2C(
+    1,
+    sda=Pin(26),
+    scl=Pin(27),
+    freq=100000
+)
+
+print("LCD BUS:")
+for address in lcd_bus.scan():
+    print(hex(address))
+
+print("AIR BUS:")
+for address in air_bus.scan():
+    print(hex(address))

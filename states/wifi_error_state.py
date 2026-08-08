@@ -16,7 +16,7 @@ class WifiErrorState(BaseState):
 
     def enter(self, app):
         # Show error message and instructions to retry
-        app.display.show(self.message[:16], "Press GP22 to retry")
+        app.display.show(self.message[:16], "ERR: Press GP22")
 
         # Configure button on GP22 (assume active-low with pull-up)
         self.button_pin = Pin(22, Pin.IN, Pin.PULL_UP)
@@ -52,7 +52,8 @@ class WifiErrorState(BaseState):
             if self.button_pin.value() == 0:
                 app.display.show("Reconnecting...", "Please wait...")
 
-                success = app.wifi.connect()
+                # Try a few reconnect attempts when user presses retry
+                success = app.wifi.connect_with_retries(retries=3, timeout_seconds=10)
 
                 if success:
                     app.rgb.green()

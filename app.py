@@ -27,6 +27,8 @@ class App:
 
         self.state = None
         self.running = True
+        self.wifi_check_interval_ms = 10000
+        self.last_wifi_check = time.ticks_ms()
 
     def change_state(self, new_state):
         if self.state is not None:

@@ -20,7 +20,8 @@ class WiFiState(BaseState):
 
         self.connection_attempted = True
 
-        success = app.wifi.connect()
+        # Use retry-capable connect to improve robustness
+        success = app.wifi.connect_with_retries(retries=3, timeout_seconds=10)
 
         if success:
             app.change_state(TimeSyncState())

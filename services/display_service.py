@@ -66,16 +66,19 @@ class DisplayService:
         self.command(0x80 | (address + column))
 
     def show(self, line1="", line2=""):
-        if (len(line1) > 16) or (len(line2) > 16):
-            raise ValueError("Lines must be 16 characters or less.")
-        
+        # Ensure we never send more than 16 characters per line to the display.
+        # Truncate rather than raising so callers don't crash when strings are
+        # longer than the hardware supports.
+        line1 = str(line1)[:16]
+        line2 = str(line2)[:16]
+
         self.clear()
 
         self.set_cursor(0, 0)
-        self.write(line1[:16])
+        self.write(line1)
 
         self.set_cursor(1, 0)
-        self.write(line2[:16])
+        self.write(line2)
 
     def _init_lcd(self):
         time.sleep_ms(50)

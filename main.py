@@ -58,6 +58,8 @@ telemetry_service = TelemetryService(
     dht_service=dht_service,
     air_service=ccs811_service,
     persistence_service=persistence_service,
+    wifi_service=wifi_service,
+    rgb_service=rgb_service,
     interval_ms=30000
 )
 

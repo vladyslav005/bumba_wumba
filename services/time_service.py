@@ -1,13 +1,16 @@
 import ntptime
 import time
 
+from config import NTP_SERVER, TIMEZONE_OFFSET_SECONDS
+
 
 class TimeService:
 
     def sync(self):
         try:
-            print("Synchronizing internet time...")
+            print(f"Synchronizing internet time from {NTP_SERVER}...")
 
+            ntptime.host = NTP_SERVER
             ntptime.settime()
 
             print("Time synchronized")
@@ -18,7 +21,7 @@ class TimeService:
             return False
 
     def get_time(self):
-        return time.localtime()
+        return time.localtime(time.time() + TIMEZONE_OFFSET_SECONDS)
 
     def get_formatted_time(self):
         current = self.get_time()
@@ -34,7 +37,7 @@ class TimeService:
             day,
             month,
             year,
-            hour + 2,  # Adjust for timezone (UTC+2)
+            hour,
             minute,
             second
         )

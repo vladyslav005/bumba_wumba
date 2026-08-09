@@ -10,7 +10,8 @@ class TelemetryService:
         persistence_service,
         wifi_service=None,
         rgb_service=None,
-        interval_ms=30000
+        interval_ms=30000,
+        sample_interval_ms=1000
     ):
         self.dht = dht_service
         self.air = air_service
@@ -19,7 +20,14 @@ class TelemetryService:
         self.rgb = rgb_service
 
         self.interval_ms = interval_ms
-        self.last_save = time.ticks_ms()
+        self.sample_interval_ms = sample_interval_ms
+        self.window_start_ms = time.ticks_ms()
+        self.last_sample_ms = time.ticks_ms() - sample_interval_ms
+        self.sample_count = 0
+        self.temperature_sum = 0.0
+        self.humidity_sum = 0.0
+        self.eco2_sum = 0.0
+        self.tvoc_sum = 0.0
 
     def update_led_from_air_quality(self, eco2, tvoc):
         if self.rgb is None:
@@ -32,31 +40,29 @@ class TelemetryService:
         else:
             self.rgb.green()
 
-    def update(self):
-        now = time.ticks_ms()
+    def _reset_window(self, now=None):
+        if now is None:
+            now = time.ticks_ms()
 
-        if time.ticks_diff(now, self.last_save) < self.interval_ms:
+        self.window_start_ms = now
+        self.sample_count = 0
+        self.temperature_sum = 0.0
+        self.humidity_sum = 0.0
+        self.eco2_sum = 0.0
+        self.tvoc_sum = 0.0
+
+    def _persist_window(self, now=None):
+        if now is None:
+            now = time.ticks_ms()
+
+        if self.sample_count == 0:
+            print("Telemetry: no samples collected for persistence window")
             return
 
-        self.last_save = now
-
-        climate = self.dht.read()
-        air = self.air.read()
-
-        if climate is None:
-            print("Telemetry: DHT data unavailable")
-            return
-
-        if air is None:
-            print("Telemetry: air data unavailable")
-            return
-
-        temperature = climate["temperature"]
-        humidity = climate["humidity"]
-        eco2 = air["eco2"]
-        tvoc = air["tvoc"]
-
-        self.update_led_from_air_quality(eco2, tvoc)
+        temperature = self.temperature_sum / self.sample_count
+        humidity = self.humidity_sum / self.sample_count
+        eco2 = int(round(self.eco2_sum / self.sample_count))
+        tvoc = int(round(self.tvoc_sum / self.sample_count))
 
         print(
             "Telemetry:",
@@ -65,6 +71,7 @@ class TelemetryService:
             eco2, "ppm",
             tvoc, "ppb"
         )
+
         # If WiFi is available and disconnected, try to reconnect before saving.
         if self.wifi is not None and not self.wifi.is_connected():
             print("Telemetry: WiFi disconnected, attempting reconnect")
@@ -72,7 +79,6 @@ class TelemetryService:
                 print("Telemetry: unable to reconnect, skipping persistence")
                 return
 
-        # Try to persist with a small retry loop in case of transient network errors.
         success = self.persistence.save(
             temperature=temperature,
             humidity=humidity,
@@ -93,3 +99,32 @@ class TelemetryService:
 
                 if success:
                     break
+
+    def update(self):
+        now = time.ticks_ms()
+
+        if time.ticks_diff(now, self.last_sample_ms) < self.sample_interval_ms:
+            return
+
+        self.last_sample_ms = now
+
+        climate = self.dht.read()
+        air = self.air.read()
+
+        if climate is not None and air is not None:
+            self.sample_count += 1
+            self.temperature_sum += climate["temperature"]
+            self.humidity_sum += climate["humidity"]
+            self.eco2_sum += air["eco2"]
+            self.tvoc_sum += air["tvoc"]
+            self.update_led_from_air_quality(air["eco2"], air["tvoc"])
+        else:
+            # Skip samples that are not ready yet. The display can still show
+            # the last good value, and we do not want to spam the logs.
+            return
+
+        if time.ticks_diff(now, self.window_start_ms) < self.interval_ms:
+            return
+
+        self._persist_window(now)
+        self._reset_window(now)

@@ -16,6 +16,7 @@ from services.time_service import TimeService
 from states.air_quality_state import AirQualityState
 from states.boot_state import BootState
 from states.climate_state import ClimateState
+from states.configuration_state import ConfigurationState
 from states.home_state import HomeState
 from states.wifi_info_state import WifiInfoState
 

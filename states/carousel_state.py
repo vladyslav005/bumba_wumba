@@ -1,4 +1,5 @@
 from states.base_state import BaseState
+from states.configuration_state import ConfigurationState
 import time
 from machine import Pin
 
@@ -19,6 +20,9 @@ class CarouselState(BaseState):
             20: "next",
             22: "previous",
         }
+        self.configure_pin = None
+        self.configure_pressed_at = None
+        self.configure_button_active = False
         self.button_pins = {}
         self._init_gpio_buttons()
 
@@ -97,5 +101,27 @@ class CarouselState(BaseState):
                     app.change_state(app.navigator.previous(app.state))
 
                 return True
+
+        if self.configure_pin is None:
+            try:
+                self.configure_pin = Pin(21, Pin.IN, Pin.PULL_UP)
+            except Exception:
+                self.configure_pin = None
+
+        if self.configure_pin is not None:
+            try:
+                value = self.configure_pin.value()
+            except Exception:
+                value = 1
+
+            if value == 0:
+                if self.configure_pressed_at is None:
+                    self.configure_pressed_at = now
+                elif time.ticks_diff(now, self.configure_pressed_at) >= 2000:
+                    app.change_state(ConfigurationState(previous_state=app.state))
+                    self.configure_pressed_at = None
+                    return True
+            else:
+                self.configure_pressed_at = None
 
         return False

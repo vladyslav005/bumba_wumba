@@ -7,7 +7,11 @@ class WiFiService:
         self.ssid = ssid
         self.password = password
 
-        self.wlan = network.WLAN(network.WLAN.IF_STA)
+        sta_if = getattr(network, "STA_IF", None)
+        if sta_if is None:
+            sta_if = getattr(network.WLAN, "IF_STA", None)
+
+        self.wlan = network.WLAN(sta_if)
 
     def connect(self, timeout_seconds=10):
         if self.wlan.isconnected():
